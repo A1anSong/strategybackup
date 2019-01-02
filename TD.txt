@@ -1,0 +1,42 @@
+N = Input('N number', 3, 1, 999)
+Kb = Input('Kbuy', 1.6, 0.5, 2)
+Ks = Input('Ksell', 1.5, 0.5, 2)
+
+open = GetOpenPrices()
+high = GetHighPrices()
+low = GetLowPrices()
+close = GetClosePrices()
+
+HH = GetHigh(Offset(high, 1), N)
+HC = GetHigh(Offset(close, 1), N)
+LC = GetLow(Offset(close, 1), N)
+LL = GetLow(Offset(low, 1), N)
+
+HHLC = HH - LC
+HCLL = HC -LL
+
+if (HHLC >= HCLL) then
+    Range = HHLC
+else
+    Range = HCLL
+end
+
+BuyLine = open[1] + Range * Kb
+SellLine = open[1] - Range * Ks
+
+if (close[1] > BuyLine) then
+    if (BotPosition() <= 0) then
+        ExitPosition()
+        LongBuy()
+    end
+end
+
+if (close[1] < SellLine) then
+    if (BotPosition() >= 0) then
+        ExitPosition()
+        ShortSell()
+    end
+end
+
+Plot('BuyLine', open[1] + Range * Kb, 0, Green)
+Plot('SellLine', open[1] - Range * Ks, 0, Red)

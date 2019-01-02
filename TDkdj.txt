@@ -1,0 +1,82 @@
+N = Input('N number', 4, 1, 999)
+
+open = GetOpenPrices()
+high = GetHighPrices()
+low = GetLowPrices()
+close = GetClosePrices()
+
+HH = GetHigh(Offset(high, 1), N)
+HC = GetHigh(Offset(close, 1), N)
+LC = GetLow(Offset(close, 1), N)
+LL = GetLow(Offset(low, 1), N)
+
+HHLC = HH - LC
+HCLL = HC -LL
+
+if (HHLC >= HCLL) then
+    Range = HHLC
+else
+    Range = HCLL
+end
+
+RSV = (close[1] - GetLow(low, 9)) / (GetHigh(high, 9) - GetLow(low, 9)) * 100
+
+pK = Load('K')
+pD = Load('D')
+pJ = Load('J')
+
+if (pK == null) then
+    pK = 50
+end
+if (pD == null) then
+    pD = 50
+end
+if (pJ == null) then
+    pJ = 50
+end
+
+K = (RSV + 2 * pK) / 3
+D = (K + 2 * pD) / 3
+J = 3 * K - 2 * D
+
+Save('K', K)
+Save('D', D)
+Save('J', J)
+
+if (D < 40 and K < 25 and (J < 10 or pJ < 5 and J - pJ > 20) and (K > D or K - pK > D - pD)) then
+    Kb = 0.25
+else
+    Kb = 3
+end
+
+if (D > 60 and K > 75 and (J > 90 or pJ > 95 and J - pJ < -20) and (K < D or K - pK < D - pD)) then
+    Ks = 0.25
+else
+    Ks = 3
+end
+
+BuyLine = open[1] + Range * Kb
+SellLine = open[1] - Range * Ks
+
+if (close[1] > BuyLine) then
+    if (BotPosition() <= 0) then
+        ExitPosition()
+        LongBuy()
+    end
+end
+
+if (close[1] < SellLine) then
+    if (BotPosition() >= 0) then
+        ExitPosition()
+        ShortSell()
+    end
+end
+
+Plot('Kb', Kb, 2, Green)
+Plot('Ks', Ks, 2, Red)
+Plot('BuyLine', open[1] + Range * Kb, 0, Green)
+Plot('SellLine', open[1] - Range * Ks, 0, Red)
+
+Plot('K', K, 1, Blue)
+Plot('D', D, 1, Yellow)
+Plot('J', J, 1, Purple)
